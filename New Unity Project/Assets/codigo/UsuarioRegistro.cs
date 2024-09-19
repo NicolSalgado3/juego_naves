@@ -1,13 +1,9 @@
-﻿using System; 
+using System;
+
 [Serializable]
-
-
-public class Usuario 
+public class UsuarioRegistro
 {
     public string cedula;
-
     public string nombre;
-
     public string email;
-
 }

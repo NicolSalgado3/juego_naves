@@ -3,29 +3,46 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
 
+
 public class ServiciosWeb : MonoBehaviour
 {
-    public RespuestaRegistro respuestaRegistro;
-    // Start is called before the first frame update
+    public DatosServiciosWeb registroUsuario;
+    public RespuestaRegistroUsuario respuestaRegistroUsuario;
     void Start()
     {
-        Usuario usuario =new Usuario();
-        usuario.cedula="1053778651";
-        usuario.nombre="Henry Cavil";
-        usuario.email="henry@gmail.com";
-        StartCoroutine(RegistrarUsuario(usuario));
+        DatosRegistroUsuario registro = new DatosRegistroUsuario{};
+        registro.cedula = "197373745";
+        registro.email = "juan123@hotmail.com";
+        registro.nombre = "pedro";
+        StartCoroutine(RegistrarUsuario(registro));
     }
-
-    public IEnumerator RegistrarUsuario(Usuario datosRegistro)
+    public IEnumerator RegistrarUsuario(DatosRegistroUsuario registro)
     {
-        var registroJSON = JsonUtility.ToJson(datosRegistro);
+        var respuestaJSON = JsonUtility.ToJson(registro);
 
         var solicitud = new UnityWebRequest();
-        solicitud.url = "http://localhost:3000/api/jugador/registrar";
+        solicitud.url = registroUsuario.url;
+        
+        byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(respuestaJSON);
+        solicitud.uploadHandler = new UploadHandlerRaw(bodyRaw);
+        solicitud.downloadHandler = new DownloadHandlerBuffer();
+        solicitud.method = UnityWebRequest.kHttpVerbPOST;
+        solicitud.SetRequestHeader("Content-Type", "application/json");
+        
+        solicitud.timeout = 10;
 
-        byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(registroJSON);
-        solicitud.uploadHandler = new uploadHandlerRaw(bodyRaw);
-        soli
+        yield return solicitud.SendWebRequest();
+
+        if (solicitud.isNetworkError || solicitud.isHttpError)
+        {
+            registroUsuario.mensaje = "Conexion fallida";
+        }
+        else
+        {           
+            respuestaRegistroUsuario = (RespuestaRegistroUsuario)JsonUtility.FromJson(solicitud.downloadHandler.text, typeof(RespuestaRegistroUsuario));
+            registroUsuario.mensaje = respuestaRegistroUsuario.mensaje;
+        }
+        solicitud.Dispose();
+        registroUsuario.evento.Invoke();
     }
-
 }
